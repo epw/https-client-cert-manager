@@ -1,0 +1,2 @@
+# Delete old SSL user certs
+7 * * * *  find /home/eric/certs/generated -mtime +1 -exec rm {} \;

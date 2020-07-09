@@ -1,0 +1,16 @@
+When you need to generate a new server key (say, for the once-a-year
+rotation), use ./create-server-ca.sh
+
+When you need to create a new client key, use ./create-client-cert.sh
+
+When you need to protect a directory, create a .htaccess file in the
+directory with "SSLVerifyClient require"
+
+The user is the environment variable $SSL_CLIENT_S_DN_CN
+
+History:
+
+first/ based on https://stuff-things.net/2015/09/17/client-certificate-ca-setup-and-signing/
+for SSL client certs, didn't work
+
+new attempt using https://manintheit.org/security/ssl-client-certificate-authentication-with-apache/
