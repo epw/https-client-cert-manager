@@ -25,7 +25,13 @@ import os
 import pytz
 import random
 import subprocess
+from types import SimpleNamespace
 import util
+
+try:
+  import priv
+except ModuleNotFoundError:
+  priv = SimpleNamespace(password=None)
 
 
 CA_DIR = "/home/eric/certs"
@@ -56,7 +62,7 @@ def process_expiration(expiration):
 
 def cryptography(cn, passphrase, expiration=None):
   ca_cert = crypto.load_certificate(crypto.FILETYPE_PEM, open(cert_file("CA.crt"), "rb").read())
-  ca_priv = crypto.load_privatekey(crypto.FILETYPE_PEM, open(cert_file("CA.key"), "rb").read(), bytes("Paya Manu Sama", "utf8"))
+  ca_priv = crypto.load_privatekey(crypto.FILETYPE_PEM, open(cert_file("CA.key"), "rb").read(), bytes(priv.password, "utf8"))
 
   csrrequest = crypto.X509Req()
   csrrequest.get_subject().C = "US"
