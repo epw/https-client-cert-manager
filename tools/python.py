@@ -16,13 +16,15 @@
 
 from OpenSSL import crypto
 
+password = input("Password:")
+
 ca_cert = crypto.load_certificate(crypto.FILETYPE_PEM, open("/home/eric/certs/CA.crt", "rb").read())
-ca_priv = crypto.load_privatekey(crypto.FILETYPE_PEM, open("/home/eric/certs/CA.key", "rb").read(), bytes("Paya Manu Sama", "utf8"))
+ca_priv = crypto.load_privatekey(crypto.FILETYPE_PEM, open("/home/eric/certs/CA.key", "rb").read(), bytes(password, "utf8"))
 
 csrrequest = crypto.X509Req()
 csrrequest.get_subject().C = "US"
 csrrequest.get_subject().O = "eric.willisson.org"
-csrrequest.get_subject().CN = "Eric Python"
+csrrequest.get_subject().CN = "Eric; Python"
 
 psec = crypto.PKey()
 psec.generate_key(crypto.TYPE_RSA, 2048)
