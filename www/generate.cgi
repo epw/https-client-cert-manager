@@ -102,7 +102,7 @@ def generate(cn, suffix, prefix, passphrase=None, expiration=None):
   else:
     new_cn = name
   if suffix:
-    new_cn += " " + suffix
+    new_cn += "; " + suffix
   if passphrase == "":
     passphrase = None
   filename = cryptography(new_cn, passphrase, expiration)

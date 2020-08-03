@@ -24,7 +24,7 @@ def verify_cert():
   return False
 
 def parse_cn(cn):
-  parts = cn.split(" ", 1)
+  parts = cn.split("; ", 1)
   name = parts[0]
   suffix = ""
   if len(parts) > 1:
