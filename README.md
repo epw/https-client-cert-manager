@@ -30,13 +30,13 @@ Configure your Web server to use your CA for client
 authentication. (TODO: Expand on this)
 
 Create your first client certificate by running
-`tools/create-client-cert.sh` . This will generate a .pfx
+`tools/create-client-cert.sh`. This will generate a .pfx
 file. Install that file in your Web client (TODO: Write a separate
 section on this).
 
 Now, a user can use the pages and scripts in `www/` to generate new
 certificates. The model this implements is that you must have a
-certificate in order to use anything under `www/` . (This must be
+certificate in order to use anything under `www/`. (This must be
 configured in the server). You generate a new certificate when you
 want to be able to log in from a new client, and then copy it over to
 that client.
