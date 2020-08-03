@@ -31,12 +31,19 @@ import util
 try:
   import priv
 except ModuleNotFoundError:
-  priv = SimpleNamespace(password=None)
+  priv = SimpleNamespace(password="")
 
 
 CA_DIR = "/home/eric/certs"
 CERT_DIR = os.path.join("/home/eric", "certs", "generated")
 
+# The OpenSSL libraries available in Python don't seem to work with Android.
+# In particular, Android can't handle the password-based encryption (PBE)
+# mode that Python uses. So, until this is fixed, we have to use the openssl
+# shell command instead (with NATIVE_OPENSSL = False)
+# Python uses pbeWithSHA1And3-KeyTripleDES-CBC, while the openssl command
+# defaults to pbeWithSHA1And40BitRC2-CBC
+NATIVE_OPENSSL = False
 
 def cert_file(filename):
   return os.path.join(CA_DIR, filename)
@@ -75,14 +82,19 @@ def cryptography(cn, passphrase, expiration=None):
   csrrequest.set_pubkey(psec)
   csrrequest.sign(psec, "sha256")
 
-  cert = crypto.X509()
-  cert.set_serial_number(next_serial_number())
-  cert.set_subject(csrrequest.get_subject())
-  cert.set_issuer(ca_cert.get_subject())
-  cert.gmtime_adj_notBefore( 0 )
-  cert.gmtime_adj_notAfter( process_expiration(expiration) )
-  cert.set_pubkey(csrrequest.get_pubkey())
-  cert.sign(ca_priv, "sha256")
+  if NATIVE_OPENSSL:
+    cert = crypto.X509()
+    cert.set_serial_number(next_serial_number())
+    cert.set_subject(csrrequest.get_subject())
+    cert.set_issuer(ca_cert.get_subject())
+    cert.gmtime_adj_notBefore( 0 )
+    cert.gmtime_adj_notAfter( process_expiration(expiration) )
+    cert.set_pubkey(csrrequest.get_pubkey())
+    cert.sign(ca_priv, "sha256")
+  else:
+    p = subprocess.Popen(["openssl", "x509", "-req", "-in", "from_python.csr", "-CA", "CA.crt", "-CAkey", "CA.key", "-set_serial", "19", "-out", "from_python.crt", "-passin", "pass:" + priv.password], stderr=subprocess.PIPE)
+    p.communicate()
+    cert = crypto.load_certificate(crypto.FILETYPE_PEM, open("from_python.crt", "rb").read())
 
   p12 = crypto.PKCS12()
   p12.set_privatekey(psec)
