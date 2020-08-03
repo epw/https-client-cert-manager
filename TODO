@@ -1,0 +1,6 @@
+Figure out what magic combination is needed to install certs on Android again;
+You seem to have lost them.
+
+At this point, Python program generate.cgi is just calling openssl for all
+the main work, and it seems like you're getting the right PBE output, so
+why isn't it working correctly?
