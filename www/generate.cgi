@@ -25,6 +25,8 @@ import os
 import pytz
 import random
 import subprocess
+from subprocess import PIPE
+import tempfile
 from types import SimpleNamespace
 import util
 
@@ -69,7 +71,7 @@ def process_expiration(expiration):
 
 def cryptography(cn, passphrase, expiration=None):
   ca_cert = crypto.load_certificate(crypto.FILETYPE_PEM, open(cert_file("CA.crt"), "rb").read())
-  ca_priv = crypto.load_privatekey(crypto.FILETYPE_PEM, open(cert_file("CA.key"), "rb").read(), priv.password)
+  ca_priv = crypto.load_privatekey(crypto.FILETYPE_PEM, open(cert_file("CA.key"), "rb").read(), bytes(priv.password, "utf8"))
 
   csrrequest = crypto.X509Req()
   csrrequest.get_subject().C = "US"
@@ -82,9 +84,11 @@ def cryptography(cn, passphrase, expiration=None):
   csrrequest.set_pubkey(psec)
   csrrequest.sign(psec, "sha256")
 
+  serial_number = next_serial_number()
+  
   if NATIVE_OPENSSL:
     cert = crypto.X509()
-    cert.set_serial_number(next_serial_number())
+    cert.set_serial_number(serial_number)
     cert.set_subject(csrrequest.get_subject())
     cert.set_issuer(ca_cert.get_subject())
     cert.gmtime_adj_notBefore( 0 )
@@ -92,20 +96,39 @@ def cryptography(cn, passphrase, expiration=None):
     cert.set_pubkey(csrrequest.get_pubkey())
     cert.sign(ca_priv, "sha256")
   else:
-    p = subprocess.Popen(["openssl", "x509", "-req", "-in", "from_python.csr", "-CA", "CA.crt", "-CAkey", "CA.key", "-set_serial", "19", "-out", "from_python.crt", "-passin", "pass:" + priv.password], stderr=subprocess.PIPE)
-    p.communicate()
-    cert = crypto.load_certificate(crypto.FILETYPE_PEM, open("from_python.crt", "rb").read())
-
-  p12 = crypto.PKCS12()
-  p12.set_privatekey(psec)
-  p12.set_certificate(cert)
-  p12.set_ca_certificates([ca_cert])
+    f = tempfile.NamedTemporaryFile(delete=False)
+    f.write(crypto.dump_certificate_request(crypto.FILETYPE_PEM, csrrequest))
+    f.close()
+    p = subprocess.Popen(["openssl", "x509", "-req", "-in", f.name, "-CA", cert_file("CA.crt"), "-CAkey", cert_file("CA.key"), "-passin", "pass:" + priv.password, "-set_serial", str(serial_number), "-days", "365"], stdin=PIPE, stdout=PIPE, stderr=PIPE)
+    output = p.communicate()
+    cert = crypto.load_certificate(crypto.FILETYPE_PEM, output[0])
+    os.unlink(f.name)
 
   buf = []
   for _ in range(16):
     buf.append(chr(random.randint(0, 128)))
   filename = hashlib.sha256(bytes(datetime.isoformat(datetime.now()) + "".join(buf), "utf8")).hexdigest()
-  open(os.path.join(CERT_DIR, filename), "wb").write(p12.export(passphrase=passphrase))
+  if NATIVE_OPENSSL:
+    p12 = crypto.PKCS12()
+    p12.set_privatekey(psec)
+    p12.set_certificate(cert)
+    p12.set_ca_certificates([ca_cert])
+
+    open(os.path.join(CERT_DIR, filename), "wb").write(p12.export(passphrase=passphrase))
+  else:
+    client_key = tempfile.NamedTemporaryFile(delete=False)
+    client_key.write(crypto.dump_privatekey(crypto.FILETYPE_PEM, psec))
+    client_key.close()
+    
+    client_cert = tempfile.NamedTemporaryFile(delete=False)
+    client_cert.write(crypto.dump_certificate(crypto.FILETYPE_PEM, cert))
+    client_cert.close()
+    p = subprocess.Popen(["openssl", "pkcs12", "-export", "-out", os.path.join(CERT_DIR, filename), "-inkey", client_key.name, "-in", client_cert.name, "-certfile", cert_file("CA.crt"), "-password", "pass:" + (passphrase or "")],
+                         stdin=PIPE, stdout=PIPE, stderr=PIPE)
+    o = p.communicate()
+    os.unlink(client_key.name)
+    os.unlink(client_cert.name)
+    
   return filename
 
 
