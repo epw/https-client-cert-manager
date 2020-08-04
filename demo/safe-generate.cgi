@@ -29,7 +29,6 @@ import pytz
 import random
 from types import SimpleNamespace
 from urllib.parse import urlencode
-import util
 
 try:
   import priv
@@ -111,14 +110,11 @@ def cryptography(cn, passphrase, expiration=None):
   return filename
 
 
-def generate(cn, suffix, prefix, passphrase=None, expiration=None):
+def generate(suffix, passphrase=None, expiration=None):
   print("Content-Type: text/html\n")
 
-  name, _ = util.parse_cn(cn)
-  if util.is_admin(name) and prefix:
-    new_cn = prefix
-  else:
-    new_cn = name
+  cn = name = random_name()
+  new_cn = name
   if suffix:
     new_cn += "; " + suffix
   if passphrase == "":
@@ -134,7 +130,7 @@ def generate(cn, suffix, prefix, passphrase=None, expiration=None):
 
 def main():
   params = cgi.FieldStorage()
-  generate(random_name(), params.getfirst("suffix"), None,
+  generate(params.getfirst("suffix"),
            params.getfirst("passphrase", None), params.getfirst("expiration", None))
   
 
