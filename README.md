@@ -35,11 +35,27 @@ file. Install that file in your Web client (TODO: Write a separate
 section on this).
 
 Now, a user can use the pages and scripts in `www/` to generate new
-certificates. The model this implements is that you must have a
+certificates. The model this assume is that you must already have a
 certificate in order to use anything under `www/`. (This must be
 configured in the server). You generate a new certificate when you
 want to be able to log in from a new client, and then copy it over to
 that client.
+
+Since downloading likely involves a client without a certificate, you
+will need to make `www/download-cert.cgi` available somewhere that
+does not require a certificate already. Update `PUBLIC_DOWNLOAD` in
+`www/generate.cgi` to identify this location. `www/download-cert.cgi`
+requires `www/generate.template.html` in the same directory, so make a
+copy or symbolic link to it.
+
+Finally, you will want to change the organization name from
+`eric.willisson.org` to something that identifies your own server. You
+should do this in `tools/create-client-cert.sh` before making the
+first one if you use the option with the Common Name on the command
+line, and on the line in `www/generate.cgi` where
+`csrrequest.get_subject().O` is set.
+
+### Names and Identities
 
 This system uses the convention that the Common Name (CN) in the
 certificate starts with the the user identity, followed by a
