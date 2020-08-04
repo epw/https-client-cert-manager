@@ -1,0 +1,66 @@
+<!doctype html>
+<!--Copyright 2020 Google LLC
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+   https://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.-->
+<html>
+  <head>
+    <title>Client Certs Download Details</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="style.css">
+  </head>
+  <body>
+    <h1>Download Details</h1>
+    <p>
+      This is mostly meant for people who might make their own
+      implementation, or who are trying to figure out which link to
+      use for their special browser.
+    </p>
+    <p>
+      This system generates a <code>.pfx</code> file for you to
+      download. Strictly speaking, it's a PKCS #12 archive file,
+      containing a private key and a X.509 certificate signed by this
+      server's HTTPS Client Certificate CA.
+    </p>
+    <p>
+      I'm not entirely sure why, but Google Chrome prefers that these
+      files be served with the
+      <code>application/x-x509-user-cert</code> MIME type. Apache seems
+      to automatically names a file served this way
+      <code>user.crt</code>. When the downloaded file is clicked on,
+      Chrome will be nice enough to open chrome://settings/certificates
+      for the user, though it won't install the certificate automatically.
+    </p>
+    <p>
+      However, Android will silently refuse to deal with these
+      files. It insists that the file have the <code>.pfx</code>
+      extension, and if one is served with the
+      <code>application/x-pkcs12</code> MIME type, it will be willing
+      to open the file with the certificate installer. The exact same
+      file with a different extension will either not allow the
+      certificate installer to launch, or will cause the installer to
+      close without any explanation if run manually.
+    </p>
+    <p>
+      To finish keeping it from being easy, Chrome will open a
+      <code>.pfx</code> file in an unusual dialog which shows the
+      contents, but with a grayed-out "Import" button. So, for the
+      moment, the two links are necessary. Hopefully, at some point,
+      either Chrome or Android will become more flexible and accept
+      the others'.
+    </p>
+    <p>
+      I'll be experimenting with more browsers over time, so I can add
+      them to this documentation.
+    </p>
+  </body>
+</html>

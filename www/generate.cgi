@@ -28,6 +28,7 @@ import subprocess
 from subprocess import PIPE
 import tempfile
 from types import SimpleNamespace
+from urllib.parse import urlencode
 import util
 
 try:
@@ -38,6 +39,8 @@ except ModuleNotFoundError:
 
 CA_DIR = "/home/eric/certs"
 CERT_DIR = os.path.join("/home/eric", "certs", "generated")
+
+PUBLIC_DOWNLOAD = "https://eric.willisson.org/download-cert.cgi?id={filename}&type={type}"
 
 # The OpenSSL libraries available in Python don't seem to work with Android.
 # In particular, Android can't handle the password-based encryption (PBE)
@@ -107,7 +110,7 @@ def cryptography(cn, passphrase, expiration=None):
   buf = []
   for _ in range(16):
     buf.append(chr(random.randint(0, 128)))
-  filename = hashlib.sha256(bytes(datetime.isoformat(datetime.now()) + "".join(buf), "utf8")).hexdigest()
+  filename = hashlib.sha256(bytes(datetime.isoformat(datetime.now()) + "".join(buf), "utf8")).hexdigest() + ".pfx"
   if NATIVE_OPENSSL:
     p12 = crypto.PKCS12()
     p12.set_privatekey(psec)
@@ -149,7 +152,10 @@ def generate(cn, suffix, prefix, passphrase=None, expiration=None):
   filename = cryptography(new_cn, passphrase, expiration)
 
   with open("generate.template.html") as f:
-    print(f.read().format(cn=cn, new_cn=new_cn, filename=filename))
+    print(f.read().format(cn=cn, new_cn=new_cn, extra_css="",
+                          crt_link=PUBLIC_DOWNLOAD.format(filename=filename, type="crt"),
+                          pfx_link=PUBLIC_DOWNLOAD.format(filename=filename, type="pfx"),
+                          explain_link=PUBLIC_DOWNLOAD.format(filename=filename, type="explain") + "&" + urlencode({"cn": new_cn, "oldcn": cn})))
 
 
 def main():
