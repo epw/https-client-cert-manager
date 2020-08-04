@@ -1,0 +1,43 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Client Certs - Public Example</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+ code { color: #eee; }
+    </style>
+  </head>
+  <body>
+    <h1>Client Certs - Public Example</h1>
+    <p>
+      This is an implementation of the system at <a target="_blank"
+      href="https://github.com/epw/https-client-cert-manager">https://github.com/epw/https-client-cert-manager</a>. This
+      page is provided to try out the system. It will let you generate
+      a real client certificate for this Web server. Since it is just
+      a testing server, all you will really be able to do with this
+      certificate is generate more certificates, but that should let
+      you explore what it is like to use them across different devices.
+    </p>
+    <p>
+      Normally, you would probably want some other method of vetting
+      users and knowing who they are, so that you can assign them
+      meaningful names. As it is, this will simply generate a random
+      10-letter string as a name. This even means that there is a tiny
+      (26<sup>-10</sup>) chance that your name will be the same as
+      someone else's, and so, even though you will have different
+      public keys, this server's standard identification software will
+      confuse you. Again, a real server implementing this system
+      should be smarter.
+    </p>
+    <p>
+      If you're ready to download a certificate, then <form
+      action="safe-generate.cgi" method="POST"><button>Click
+      here</button></form>
+    </p>
+    <p>
+      After that, you will be able to access <a
+      href="https://eric-cert.willisson.org/certs/">https://eric-cert.willisson.org/certs/</a>,
+      and use it to generate new certs.
+    </p>
+  </body>
+</html>

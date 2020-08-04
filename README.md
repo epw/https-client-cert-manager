@@ -12,6 +12,12 @@ It requires a Web server using HTTPS, where you can run programs. It
 should work with most Web clients. It normally applies to a single
 domain name or subdomain, in the same way HTTPS does.
 
+## Demo
+
+You can try this out at https://eric.willisson.org/public-cert.html
+. It will let you generate a certificate ("cert") and then access a
+page to generate more certs.
+
 ## Usage
 
 First, you'll need to have your server configured to use
