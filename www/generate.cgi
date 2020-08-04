@@ -24,9 +24,6 @@ from OpenSSL import crypto
 import os
 import pytz
 import random
-import subprocess
-from subprocess import PIPE
-import tempfile
 from types import SimpleNamespace
 from urllib.parse import urlencode
 import util
@@ -41,14 +38,6 @@ CA_DIR = "/home/eric/certs"
 CERT_DIR = os.path.join("/home/eric", "certs", "generated")
 
 PUBLIC_DOWNLOAD = "https://eric.willisson.org/download-cert.cgi?id={filename}&type={type}"
-
-# The OpenSSL libraries available in Python don't seem to work with Android.
-# In particular, Android can't handle the password-based encryption (PBE)
-# mode that Python uses. So, until this is fixed, we have to use the openssl
-# shell command instead (with NATIVE_OPENSSL = False)
-# Python uses pbeWithSHA1And3-KeyTripleDES-CBC, while the openssl command
-# defaults to pbeWithSHA1And40BitRC2-CBC
-NATIVE_OPENSSL = False
 
 def cert_file(filename):
   return os.path.join(CA_DIR, filename)
@@ -89,48 +78,25 @@ def cryptography(cn, passphrase, expiration=None):
 
   serial_number = next_serial_number()
   
-  if NATIVE_OPENSSL:
-    cert = crypto.X509()
-    cert.set_serial_number(serial_number)
-    cert.set_subject(csrrequest.get_subject())
-    cert.set_issuer(ca_cert.get_subject())
-    cert.gmtime_adj_notBefore( 0 )
-    cert.gmtime_adj_notAfter( process_expiration(expiration) )
-    cert.set_pubkey(csrrequest.get_pubkey())
-    cert.sign(ca_priv, "sha256")
-  else:
-    f = tempfile.NamedTemporaryFile(delete=False)
-    f.write(crypto.dump_certificate_request(crypto.FILETYPE_PEM, csrrequest))
-    f.close()
-    p = subprocess.Popen(["openssl", "x509", "-req", "-in", f.name, "-CA", cert_file("CA.crt"), "-CAkey", cert_file("CA.key"), "-passin", "pass:" + priv.password, "-set_serial", str(serial_number), "-days", "365"], stdin=PIPE, stdout=PIPE, stderr=PIPE)
-    output = p.communicate()
-    cert = crypto.load_certificate(crypto.FILETYPE_PEM, output[0])
-    os.unlink(f.name)
+  cert = crypto.X509()
+  cert.set_serial_number(serial_number)
+  cert.set_subject(csrrequest.get_subject())
+  cert.set_issuer(ca_cert.get_subject())
+  cert.gmtime_adj_notBefore( 0 )
+  cert.gmtime_adj_notAfter( process_expiration(expiration) )
+  cert.set_pubkey(csrrequest.get_pubkey())
+  cert.sign(ca_priv, "sha256")
 
   buf = []
   for _ in range(16):
     buf.append(chr(random.randint(0, 128)))
   filename = hashlib.sha256(bytes(datetime.isoformat(datetime.now()) + "".join(buf), "utf8")).hexdigest() + ".pfx"
-  if NATIVE_OPENSSL:
-    p12 = crypto.PKCS12()
-    p12.set_privatekey(psec)
-    p12.set_certificate(cert)
-    p12.set_ca_certificates([ca_cert])
+  p12 = crypto.PKCS12()
+  p12.set_privatekey(psec)
+  p12.set_certificate(cert)
+  p12.set_ca_certificates([ca_cert])
 
-    open(os.path.join(CERT_DIR, filename), "wb").write(p12.export(passphrase=passphrase))
-  else:
-    client_key = tempfile.NamedTemporaryFile(delete=False)
-    client_key.write(crypto.dump_privatekey(crypto.FILETYPE_PEM, psec))
-    client_key.close()
-    
-    client_cert = tempfile.NamedTemporaryFile(delete=False)
-    client_cert.write(crypto.dump_certificate(crypto.FILETYPE_PEM, cert))
-    client_cert.close()
-    p = subprocess.Popen(["openssl", "pkcs12", "-export", "-out", os.path.join(CERT_DIR, filename), "-inkey", client_key.name, "-in", client_cert.name, "-certfile", cert_file("CA.crt"), "-password", "pass:" + (passphrase or "")],
-                         stdin=PIPE, stdout=PIPE, stderr=PIPE)
-    o = p.communicate()
-    os.unlink(client_key.name)
-    os.unlink(client_cert.name)
+  open(os.path.join(CERT_DIR, filename), "wb").write(p12.export(passphrase=passphrase))
     
   return filename
 
