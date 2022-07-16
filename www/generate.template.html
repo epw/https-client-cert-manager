@@ -32,10 +32,19 @@ code {{ background-color: #eee; }}
     <p>This one has the Common Name <code>{new_cn}</code>.</p>
     <p>Download links (good for one day):
       <ul>
-	<li><a href="{crt_link}">For Chrome (and likely other desktop browsers)</a>
+	<li><a href="{crt_link}">For Chrome (and some other desktop browsers)</a>
 	  <ul>
-	    <li>To use, download the file here or on another computer you want to log in from, then click it in the downloaded files bar at the bottom of the page. It should open chrome://settings/certificates (you should visit that page if it doesn't).</li>
+	    <li>To use, download the file here or on another computer you want to log in from, then click it in the downloaded files bar at the bottom of the page. It should open <code>chrome://settings/certificates</code> (you should visit that page if it doesn't).</li>
 	    <li>There, under the "Your certifcates" tab, click the Import button, and select the file you just downloaded, probably called <code>user.crt</code>. Enter the passphrase you entered one on the starting page, or just hit Enter if you didn't put one in.</li>
+	    <li>You're done! Pages from this server which require client cert authentication may pop up a dialog asking which cert to use. Ordinarily, this one is the only one you will see, identified by <code>{new_cn}</code>, so you can simply click OK.</li>
+	  </ul>
+	</li>
+	<li><a href="{pfx_link}">For Firefox</a>
+	  <ul>
+	    <li>To use, download the file here or on another computer you want to log in from. It should be named <code>user.pfx</code></li>
+	    <li>Visit <code>about:preferences#privacy</code> and click the "View Certificates..." button under Security.</li>
+	    <li>In the window that comes up, click the "Your Certificates" tab.</li>
+	    <li>Click the Import button, and select the file you downloaded (<code>user.pfx</code>)</li>
 	    <li>You're done! Pages from this server which require client cert authentication may pop up a dialog asking which cert to use. Ordinarily, this one is the only one you will see, identified by <code>{new_cn}</code>, so you can simply click OK.</li>
 	  </ul>
 	</li>
